@@ -1,0 +1,15 @@
+name: docker-build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tunnel-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build VPS image
+        run: docker build -t endgateway-tunnel-vps ./tunnel/vps
+      - name: Build agent image
+        run: docker build -t endgateway-tunnel-agent ./tunnel/agent

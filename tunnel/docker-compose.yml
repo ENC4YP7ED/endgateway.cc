@@ -1,0 +1,66 @@
+services:
+  vps-tunnel:
+    build: ./vps
+    container_name: endgateway-tunnel-vps
+    restart: unless-stopped
+    ports:
+      - "8443:8443"
+      - "50000-50100:50000-50100/tcp"
+      - "50000-50100:50000-50100/udp"
+    environment:
+      TLS_CERT: /etc/tunnel/server.crt
+      TLS_KEY: /etc/tunnel/server.key
+      CA_CERT: /etc/tunnel/ca.crt
+      CF_API_TOKEN: ${CF_API_TOKEN:-}
+      CF_ZONE_ID: ${CF_ZONE_ID:-}
+      CF_DOMAIN: ${CF_DOMAIN:-}
+      VPS_PUBLIC_IP: ${VPS_PUBLIC_IP:-}
+    volumes:
+      - ./certs:/etc/tunnel:ro
+      - ./data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 400m
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8443 || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  desktop-agent:
+    profiles: ["agent"]
+    build: ./agent
+    container_name: endgateway-tunnel-agent
+    restart: unless-stopped
+    command:
+      - "-vps"
+      - "${AGENT_VPS_ADDR:-vps.example.com:8443}"
+      - "-id"
+      - "${AGENT_ID:-srv1}"
+      - "-server-name"
+      - "${AGENT_SERVER_NAME:-vps}"
+      - "-cert"
+      - "/certs/agent.crt"
+      - "-key"
+      - "/certs/agent.key"
+      - "-ca"
+      - "/certs/ca.crt"
+    volumes:
+      - ./certs:/certs:ro
+      - ./agent-data:/work
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pidof mc-agent >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
