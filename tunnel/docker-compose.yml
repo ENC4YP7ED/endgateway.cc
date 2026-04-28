@@ -5,8 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - "8443:8443"
-      - "50000-50100:50000-50100/tcp"
-      - "50000-50100:50000-50100/udp"
+      - "50000-60000:50000-60000/tcp"
+      - "50000-60000:50000-60000/udp"
     environment:
       TLS_CERT: /etc/tunnel/server.crt
       TLS_KEY: /etc/tunnel/server.key
