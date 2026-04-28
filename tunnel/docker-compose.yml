@@ -3,10 +3,7 @@ services:
     build: ./vps
     container_name: endgateway-tunnel-vps
     restart: unless-stopped
-    ports:
-      - "8443:8443"
-      - "50000-60000:50000-60000/tcp"
-      - "50000-60000:50000-60000/udp"
+    network_mode: host
     environment:
       TLS_CERT: /etc/tunnel/server.crt
       TLS_KEY: /etc/tunnel/server.key
