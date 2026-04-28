@@ -23,10 +23,15 @@ func (r *Registry) Handle(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	id := req.TLS.PeerCertificates[0].Subject.CommonName
-	if id == "" {
+	cn := req.TLS.PeerCertificates[0].Subject.CommonName
+	if cn == "" {
 		http.Error(w, "client certificate CN required", http.StatusBadRequest)
 		return
+	}
+
+	id := req.URL.Query().Get("id")
+	if id == "" {
+		id = cn
 	}
 
 	hijacker, ok := w.(http.Hijacker)

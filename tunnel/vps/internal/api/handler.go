@@ -56,7 +56,12 @@ func (s *Server) start(w http.ResponseWriter, r *http.Request) {
 	}
 	s.mu.Unlock()
 
-	tcpPort, udpPort := s.alloc.Allocate(id)
+	tcpPort, udpPort, err := s.alloc.Allocate(id)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("allocate ports: %v", err), http.StatusServiceUnavailable)
+		return
+	}
+
 	service, err := proxy.Start(tcpPort, udpPort, sess, id)
 	if err != nil {
 		s.alloc.Release(tcpPort, udpPort)

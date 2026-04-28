@@ -1,14 +1,18 @@
 package proxy
 
 import (
+	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 
 	"github.com/hashicorp/yamux"
 )
 
+const maxUDPPacket = 65535
+
 func (s *Service) serveUDP(sess *yamux.Session, id string) {
-	buf := make([]byte, 2048)
+	buf := make([]byte, maxUDPPacket)
 	streams := make(map[string]net.Conn)
 
 	for {
@@ -36,23 +40,46 @@ func (s *Service) serveUDP(sess *yamux.Session, id string) {
 			go func(addr net.Addr, stream net.Conn) {
 				defer stream.Close()
 
-				tmp := make([]byte, 2048)
+				lenBuf := make([]byte, 2)
 				for {
-					m, err := stream.Read(tmp)
-					if err != nil {
+					if _, err := io.ReadFull(stream, lenBuf); err != nil {
 						return
 					}
 
-					if _, err := s.udp.WriteTo(tmp[:m], addr); err != nil {
+					sz := binary.BigEndian.Uint16(lenBuf)
+					if sz == 0 {
+						continue
+					}
+
+					pkt := make([]byte, sz)
+					if _, err := io.ReadFull(stream, pkt); err != nil {
+						return
+					}
+
+					if _, err := s.udp.WriteTo(pkt, addr); err != nil {
 						return
 					}
 				}
 			}(addr, stream)
 		}
 
-		if _, err := stream.Write(buf[:n]); err != nil {
+		if err := writeFramed(stream, buf[:n]); err != nil {
 			stream.Close()
 			delete(streams, key)
 		}
 	}
+}
+
+func writeFramed(w io.Writer, p []byte) error {
+	if len(p) > maxUDPPacket {
+		return fmt.Errorf("udp packet too large: %d", len(p))
+	}
+
+	hdr := []byte{byte(len(p) >> 8), byte(len(p))}
+	if _, err := w.Write(hdr); err != nil {
+		return err
+	}
+
+	_, err := w.Write(p)
+	return err
 }

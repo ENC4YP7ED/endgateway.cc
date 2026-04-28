@@ -6,7 +6,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /bin/vps-tunnel ./cmd/server
 
 FROM alpine:3.19
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata netcat-openbsd
 COPY --from=build /bin/vps-tunnel /usr/local/bin/vps-tunnel
 VOLUME ["/data"]
 EXPOSE 8443

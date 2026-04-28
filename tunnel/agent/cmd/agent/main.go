@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -13,10 +14,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/ENC4YP7ED/endgateway.cc/tunnel/agent/internal/config"
 	"github.com/hashicorp/yamux"
 )
+
+const maxUDPPacket = 65535
 
 func main() {
 	vps := flag.String("vps", "localhost:8443", "vps address")
@@ -54,7 +58,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, "https://"+*vps+"/tunnel", nil)
+	req, err := http.NewRequest(http.MethodGet, "https://"+*vps+"/tunnel?id="+*id, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -126,22 +130,37 @@ func handleUDP(stream net.Conn, reader *bufio.Reader) {
 	defer voice.Close()
 
 	go func() {
-		buf := make([]byte, 2048)
+		lenBuf := make([]byte, 2)
 		for {
-			n, err := reader.Read(buf)
-			if err != nil {
+			if _, err := io.ReadFull(reader, lenBuf); err != nil {
 				return
 			}
-			if _, err := voice.Write(buf[:n]); err != nil {
+
+			sz := binary.BigEndian.Uint16(lenBuf)
+			if sz == 0 {
+				continue
+			}
+
+			pkt := make([]byte, sz)
+			if _, err := io.ReadFull(reader, pkt); err != nil {
+				return
+			}
+
+			if _, err := voice.Write(pkt); err != nil {
 				return
 			}
 		}
 	}()
 
-	buf := make([]byte, 2048)
+	buf := make([]byte, maxUDPPacket)
 	for {
 		n, err := voice.Read(buf)
 		if err != nil {
+			return
+		}
+
+		hdr := []byte{byte(n >> 8), byte(n)}
+		if _, err := stream.Write(hdr); err != nil {
 			return
 		}
 		if _, err := stream.Write(buf[:n]); err != nil {
@@ -153,30 +172,49 @@ func handleUDP(stream net.Conn, reader *bufio.Reader) {
 func notifyStart(vps, id string, tlsCfg *tls.Config) error {
 	client := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: tlsCfg},
+		Timeout:   10 * time.Second,
 	}
 
-	resp, err := client.Post("https://"+vps+"/v1/servers/"+id+"/start", "application/json", nil)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+	url := "https://" + vps + "/v1/servers/" + id + "/start"
 
-	if resp.StatusCode >= http.StatusBadRequest {
+	var lastErr error
+	for attempt := 0; attempt < 5; attempt++ {
+		if attempt > 0 {
+			time.Sleep(time.Duration(attempt*200) * time.Millisecond)
+		}
+
+		resp, err := client.Post(url, "application/json", nil)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+
 		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("start endpoint returned %s: %s", resp.Status, strings.TrimSpace(string(body)))
+		resp.Body.Close()
+
+		if resp.StatusCode == http.StatusBadRequest && strings.Contains(string(body), "no tunnel") {
+			lastErr = fmt.Errorf("session not yet registered")
+			continue
+		}
+
+		if resp.StatusCode >= http.StatusBadRequest {
+			return fmt.Errorf("start endpoint returned %s: %s", resp.Status, strings.TrimSpace(string(body)))
+		}
+
+		var payload struct {
+			VoiceHost string `json:"voice_host"`
+		}
+
+		if err := json.Unmarshal(body, &payload); err != nil {
+			return err
+		}
+
+		if payload.VoiceHost != "" {
+			config.UpdateVoiceHost(payload.VoiceHost)
+		}
+
+		return nil
 	}
 
-	var payload struct {
-		VoiceHost string `json:"voice_host"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-		return err
-	}
-
-	if payload.VoiceHost != "" {
-		config.UpdateVoiceHost(payload.VoiceHost)
-	}
-
-	return nil
+	return lastErr
 }

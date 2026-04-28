@@ -75,18 +75,8 @@ func (s *Service) serveTCP(sess *yamux.Session, id string) {
 			}
 			defer stream.Close()
 
-			ip, srcPort, err := net.SplitHostPort(client.RemoteAddr().String())
-			if err != nil {
-				return
-			}
-
 			header := fmt.Sprintf("TCP %s %s\n", id, client.RemoteAddr().String())
 			if _, err := stream.Write([]byte(header)); err != nil {
-				return
-			}
-
-			proxyHeader := fmt.Sprintf("PROXY TCP4 %s 127.0.0.1 %s %d\r\n", ip, srcPort, s.TCPPort)
-			if _, err := stream.Write([]byte(proxyHeader)); err != nil {
 				return
 			}
 

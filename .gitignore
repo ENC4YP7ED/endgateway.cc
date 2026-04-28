@@ -1,6 +1,7 @@
 .DS_Store
 .env
 *.log
+info.md
 
 tunnel/certs/
 tunnel/data/

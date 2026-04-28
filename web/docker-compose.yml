@@ -1,0 +1,15 @@
+services:
+  endgateway-web:
+    build: .
+    container_name: endgateway-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "3005:3000"
