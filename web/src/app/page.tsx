@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Icon } from "@/components/icon";
+import { LcNav } from "@/components/lc-nav";
 import { getCurrentSession } from "@/lib/session";
 
 export default async function Home() {
@@ -9,45 +10,7 @@ export default async function Home() {
 
   return (
     <>
-      <header className="lc-topnav">
-        <div className="lc-topnav-inner">
-          <div className="lc-brand">
-            <span className="lc-brand-logo">
-              <Icon icon="lucide:network" width={16} height={16} />
-            </span>
-            <span className="lc-brand-title lc-display">
-              endgateway<em>.cc</em>
-            </span>
-          </div>
-          <nav className="lc-nav-links">
-            <a href="#features">Features</a>
-            <a href="#how">How it works</a>
-            <a href="#trust">Security</a>
-          </nav>
-          <div className="lc-nav-actions">
-            <span className="lc-pill on">
-              <span />
-              Edge online
-            </span>
-            {signedIn ? (
-              <Link className="lc-btn lc-btn-primary lc-btn-small" href="/auth">
-                <Icon icon="lucide:layout-dashboard" width={14} height={14} />
-                Account
-              </Link>
-            ) : (
-              <>
-                <Link className="lc-btn lc-btn-ghost lc-btn-small" href="/login">
-                  Sign in
-                </Link>
-                <Link className="lc-btn lc-btn-primary lc-btn-small" href="/register">
-                  <Icon icon="lucide:arrow-right" width={14} height={14} />
-                  Get started
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <LcNav signedIn={signedIn} active="home" />
 
       <main className="lc-page">
         <section className="lc-hero">
@@ -154,7 +117,7 @@ export default async function Home() {
               </p>
             </article>
             <article className="lc-card">
-              <span className="lc-card-icon amber">
+              <span className="lc-card-icon purple">
                 <Icon icon="lucide:gauge" width={20} height={20} />
               </span>
               <h3 className="lc-h3">Host networking</h3>

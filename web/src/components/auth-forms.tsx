@@ -105,164 +105,122 @@ export function AuthForms({ mode }: AuthFormsProps) {
     });
   };
 
-  return (
-    <div className="liquid-shell relative rounded-[2rem] p-6 md:p-8">
-      <div className="mesh-bg" />
-      <div className="relative space-y-6">
-        <div className="space-y-2">
-          <div className="status-pill">
-            <span className="status-dot approved" />
-            <span>{mode === "login" ? "secure sign-in" : "secure sign-up"}</span>
-          </div>
-          <h1 className="font-[var(--font-monocraft)] text-3xl tracking-tight text-white md:text-4xl">
-            {mode === "login" ? "Access control plane" : "Create operator account"}
-          </h1>
-          <p className="max-w-xl text-sm leading-7 text-[var(--muted)]">
-            {mode === "login"
-              ? "Use email and password, continue through TOTP if required, or use a passkey from a device you already trust."
-              : "Register a new operator account, then add TOTP and passkeys from the security center."}
-          </p>
-        </div>
+  const isLogin = mode === "login";
 
-        <div className="grid gap-4">
-          {mode === "register" ? (
-            <>
-              <label className="grid gap-2 text-sm text-white">
-                <span>Display name</span>
-                <input
-                  autoComplete="name"
-                  className="field"
-                  name="name"
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder="Operator name"
-                  required
-                  value={name}
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-white">
-                <span>Email address</span>
-                <input
-                  autoComplete="email"
-                  className="field"
-                  name="email"
-                  onChange={(event) => setRegisterEmail(event.target.value)}
-                  placeholder="operator@endgateway.cc"
-                  required
-                  type="email"
-                  value={registerEmail}
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-white">
-                <span>Password</span>
-                <input
-                  autoComplete="new-password"
-                  className="field"
-                  name="password"
-                  onChange={(event) => setRegisterPassword(event.target.value)}
-                  placeholder="Minimum 8 characters"
-                  required
-                  type="password"
-                  value={registerPassword}
-                />
-              </label>
-            </>
-          ) : (
-            <>
-              <label className="grid gap-2 text-sm text-white">
-                <span>Email address</span>
-                <input
-                  autoComplete="username webauthn"
-                  className="field"
-                  name="email"
-                  onChange={(event) => setLoginEmail(event.target.value)}
-                  placeholder="operator@endgateway.cc"
-                  required
-                  type="email"
-                  value={loginEmail}
-                />
-              </label>
-              <label className="grid gap-2 text-sm text-white">
-                <span>Password</span>
-                <input
-                  autoComplete="current-password webauthn"
-                  className="field"
-                  name="password"
-                  onChange={(event) => setLoginPassword(event.target.value)}
-                  placeholder="Your password"
-                  required
-                  type="password"
-                  value={loginPassword}
-                />
-              </label>
-            </>
-          )}
-        </div>
+  return (
+    <div className="lc-panel">
+      <div className="lc-panel-title">
+        {isLogin ? "Access control plane" : "Create operator account"}
+      </div>
+      <p className="lc-panel-sub">
+        {isLogin
+          ? "Email and password, then TOTP if enabled — or skip straight to a passkey."
+          : "Register your operator account, then add TOTP and passkeys from the security center."}
+      </p>
+
+      <form
+        className="lc-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          submitCredentials();
+        }}
+      >
+        {!isLogin ? (
+          <label className="lc-field">
+            <span className="lc-field-label">Display name</span>
+            <input
+              autoComplete="name"
+              className="lc-input"
+              name="name"
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Operator name"
+              required
+              value={name}
+            />
+          </label>
+        ) : null}
+
+        <label className="lc-field">
+          <span className="lc-field-label">Email address</span>
+          <input
+            autoComplete={isLogin ? "username webauthn" : "email"}
+            className="lc-input"
+            name="email"
+            onChange={(event) =>
+              isLogin
+                ? setLoginEmail(event.target.value)
+                : setRegisterEmail(event.target.value)
+            }
+            placeholder="operator@endgateway.cc"
+            required
+            type="email"
+            value={isLogin ? loginEmail : registerEmail}
+          />
+        </label>
+
+        <label className="lc-field">
+          <span className="lc-field-label">Password</span>
+          <input
+            autoComplete={isLogin ? "current-password webauthn" : "new-password"}
+            className="lc-input"
+            name="password"
+            onChange={(event) =>
+              isLogin
+                ? setLoginPassword(event.target.value)
+                : setRegisterPassword(event.target.value)
+            }
+            placeholder={isLogin ? "Your password" : "Minimum 8 characters"}
+            required
+            type="password"
+            value={isLogin ? loginPassword : registerPassword}
+          />
+        </label>
 
         <TurnstileGate ref={turnstileRef} />
 
-        {error ? (
-          <div className="rounded-2xl border border-[rgba(255,125,125,0.28)] bg-[rgba(60,13,17,0.44)] px-4 py-3 text-sm text-[var(--danger)]">
-            {error}
-          </div>
-        ) : null}
+        {error ? <div className="lc-alert">{error}</div> : null}
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <button
-            className="glass-button"
-            disabled={pending}
-            onClick={submitCredentials}
-            type="button"
-          >
-            <Icon
-              className="text-[var(--accent)]"
-              height={18}
-              icon="lucide:key-round"
-              width={18}
-            />
-            <span>
-              {pending
-                ? "Processing"
-                : mode === "login"
-                  ? "Continue with password"
-                  : "Create account"}
-            </span>
-          </button>
+        <button
+          className="lc-btn lc-btn-primary lc-btn-large lc-btn-block"
+          disabled={pending}
+          type="submit"
+        >
+          <Icon
+            icon={isLogin ? "lucide:key-round" : "lucide:user-plus"}
+            width={16}
+            height={16}
+          />
+          <span>
+            {pending
+              ? "Processing…"
+              : isLogin
+                ? "Continue with password"
+                : "Create account"}
+          </span>
+        </button>
 
-          {mode === "login" ? (
+        {isLogin ? (
+          <>
+            <div className="lc-divider">or</div>
             <button
-              className="glass-button"
+              className="lc-btn lc-btn-large lc-btn-block"
               disabled={pending}
               onClick={signInWithPasskey}
               type="button"
             >
-              <Icon
-                className="text-[var(--accent-warm)]"
-                height={18}
-                icon="lucide:scan-face"
-                width={18}
-              />
-              <span>Use passkey</span>
+              <Icon icon="lucide:scan-face" width={16} height={16} />
+              <span>Use a passkey</span>
             </button>
-          ) : (
-            <Link className="glass-button" href="/login">
-              <Icon
-                className="text-[var(--accent)]"
-                height={18}
-                icon="lucide:log-in"
-                width={18}
-              />
-              <span>Already have an account</span>
-            </Link>
-          )}
-        </div>
+          </>
+        ) : null}
 
-        <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-          <Link href={mode === "login" ? "/register" : "/login"}>
-            {mode === "login" ? "Need a new account" : "Return to login"}
+        <div className="lc-form-meta">
+          <Link href={isLogin ? "/register" : "/login"}>
+            {isLogin ? "Need an account" : "Return to sign in"}
           </Link>
           <Link href="/">Back to landing</Link>
         </div>
-      </div>
+      </form>
     </div>
   );
 }
