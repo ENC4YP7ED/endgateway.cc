@@ -47,7 +47,7 @@ export default function RootLayout({
       lang="en"
       className={`${jetbrainsMono.variable} ${monocraft.variable} h-full bg-[var(--page-bg)] antialiased`}
     >
-      <body className="min-h-full bg-[var(--page-bg)] text-[var(--ink)]">
+      <body className="lc-shell min-h-full">
         <Script
           src="https://code.iconify.design/iconify-icon/3.0.0/iconify-icon.min.js"
           strategy="beforeInteractive"
