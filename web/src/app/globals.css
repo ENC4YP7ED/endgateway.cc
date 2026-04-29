@@ -807,18 +807,18 @@ button {
 /* === labyconnect-inspired base, ender-tinted ============================ */
 
 :root {
-  --lc-bg: #050108;
-  --lc-bg-2: #0c0418;
+  --lc-bg: #000000;
+  --lc-bg-2: #0a0a0a;
   --lc-text: #ffffff;
   --lc-text-2: rgba(255, 255, 255, 0.92);
   --lc-muted: rgba(229, 215, 255, 0.5);
   --lc-muted-2: rgba(229, 215, 255, 0.28);
 
-  --lc-border: rgba(168, 116, 255, 0.14);
-  --lc-border-hover: rgba(168, 116, 255, 0.32);
-  --lc-card-bg: rgba(168, 116, 255, 0.03);
-  --lc-card-hover: rgba(168, 116, 255, 0.06);
-  --lc-nav-bg: rgba(8, 3, 18, 0.55);
+  --lc-border: rgba(255, 255, 255, 0.08);
+  --lc-border-hover: rgba(168, 116, 255, 0.35);
+  --lc-card-bg: #0a0a0a;
+  --lc-card-hover: #101010;
+  --lc-nav-bg: rgba(0, 0, 0, 0.78);
 
   --lc-purple: #a874ff;
   --lc-purple-strong: #7c4dff;
@@ -849,29 +849,9 @@ body.lc-shell {
   overflow-x: hidden;
 }
 
-body.lc-shell::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background:
-    radial-gradient(1100px 600px at 80% -180px, rgba(124, 77, 255, 0.16), transparent 62%),
-    radial-gradient(900px 500px at -10% 80%, rgba(52, 211, 153, 0.06), transparent 62%),
-    radial-gradient(700px 700px at 50% 110%, rgba(168, 116, 255, 0.08), transparent 60%);
-}
-
-body.lc-shell::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px);
-  background-size: 3px 3px;
-  mix-blend-mode: overlay;
-  opacity: 0.6;
-}
+body.lc-shell::before,
+body.lc-shell::after { content: none; background: none; display: none; }
+html:has(body.lc-shell) { background: #000; }
 
 iconify-icon { display: inline-block; vertical-align: -0.125em; }
 
