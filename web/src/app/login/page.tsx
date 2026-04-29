@@ -16,22 +16,23 @@ export default async function LoginPage() {
     <>
       <LcNav signedIn={false} active="login" />
       <main className="lc-page">
-        <section className="lc-auth">
+        <header className="lc-page-header">
           <div>
             <span className="lc-eyebrow">
               <Icon icon="lucide:log-in" width={12} height={12} />
               Operator sign-in
             </span>
-            <h1 className="lc-h1">
+            <h1 className="lc-page-title" style={{ marginTop: 10 }}>
               Welcome back to <span className="lc-text-grad">the End</span>.
             </h1>
-            <p className="lc-sub" style={{ marginTop: 12, maxWidth: 420 }}>
-              Email and password, passkeys, and TOTP all live in the same flow,
-              behind Turnstile. No second app required.
+            <p className="lc-page-sub">
+              Email and password, passkeys, and TOTP — all in one flow, behind
+              Turnstile. No second app.
             </p>
           </div>
-          <AuthForms mode="login" />
-        </section>
+        </header>
+
+        <AuthForms mode="login" />
       </main>
     </>
   );

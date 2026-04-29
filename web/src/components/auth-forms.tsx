@@ -108,16 +108,29 @@ export function AuthForms({ mode }: AuthFormsProps) {
   const isLogin = mode === "login";
 
   return (
-    <div className="lc-panel">
-      <div className="lc-panel-title">
-        {isLogin ? "Access control plane" : "Create operator account"}
+    <section className="lc-block" style={{ maxWidth: 520, margin: "0 auto" }}>
+      <div className="lc-card-head">
+        <div className="lc-card-head-l">
+          <span className={`lc-card-head-icon ${isLogin ? "purple" : "green"}`}>
+            <Icon
+              icon={isLogin ? "lucide:log-in" : "lucide:user-plus"}
+              width={18}
+              height={18}
+            />
+          </span>
+          <div className="lc-card-head-text">
+            <div className="lc-card-head-title">
+              {isLogin ? "Access control plane" : "Create operator account"}
+            </div>
+            <div className="lc-card-head-desc">
+              {isLogin
+                ? "Email + password, then TOTP — or skip straight to a passkey"
+                : "Register, then harden in the security center"}
+            </div>
+          </div>
+        </div>
       </div>
-      <p className="lc-panel-sub">
-        {isLogin
-          ? "Email and password, then TOTP if enabled — or skip straight to a passkey."
-          : "Register your operator account, then add TOTP and passkeys from the security center."}
-      </p>
-
+      <div className="lc-card-body">
       <form
         className="lc-form"
         onSubmit={(event) => {
@@ -221,6 +234,7 @@ export function AuthForms({ mode }: AuthFormsProps) {
           <Link href="/">Back to landing</Link>
         </div>
       </form>
-    </div>
+      </div>
+    </section>
   );
 }
